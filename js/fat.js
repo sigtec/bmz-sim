@@ -7,7 +7,10 @@ class FAT {
         const currentIndex = state.currentIndex;
 
         // 1. Erst JETZT wird die im Display sichtbare Meldung als gelesen markiert
-        this.bmz.markCurrentAsRead();
+        // Prüfe sicherheitshalber, ob bmz existiert
+        if (this.bmz && typeof this.bmz.markCurrentAsRead === 'function') {
+            this.bmz.markCurrentAsRead();
+        }
 
         // Lampentest Zustand
         if (state.lampTestActive) {
