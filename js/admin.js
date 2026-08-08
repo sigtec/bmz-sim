@@ -12,35 +12,48 @@ class AdminUI {
 
     // Lädt Presets: 1. LocalStorage -> 2. default.json vom Server -> 3. Fallback []
     async initPresets() {
-        const saved = localStorage.getItem('bma_scenario_presets');
-        if (saved) {
-            try {
-                this.presetAlarms = JSON.parse(saved);
-                this.renderPresets();
-                return;
-            } catch (e) {
-                console.error("Fehler beim Lesen aus localStorage:", e);
-            }
+        // 1. Parameter aus dem Querystring auslesen (z.B. ?scenario=foobar oder ?scenario=foobar.json)
+        const urlParams = new URLSearchParams(window.location.search);
+        let scenarioParam = urlParams.get('scenario') || urlParams.get('szenario');
+    
+        // Dateinamen aufbauen (hängt .json an, falls nicht vorhanden)
+        let fileName = 'default.json';
+        if (scenarioParam) {
+            fileName = scenarioParam.endsWith('.json') ? scenarioParam : `${scenarioParam}.json`;
         }
-
-        // Versuche default.json vom Server zu laden
+    
+        // 2. Versuche die gewünschte JSON-Datei vom Server zu laden
         try {
-            const response = await fetch('default.json', { cache: 'no-cache' });
+            const response = await fetch(fileName, { cache: 'no-cache' });
             if (response.ok) {
                 const data = await response.json();
                 if (Array.isArray(data)) {
                     this.presetAlarms = data;
                     this.saveToStorage();
+                    this.renderPresets();
+                    return;
                 }
             }
         } catch (err) {
-            console.warn("Keine default.json gefunden oder Netzwerkfehler. Start ohne Vorlagen.", err);
+            console.warn(`Datei ${fileName} konnte nicht geladen werden. Prüfe LocalStorage / Fallback.`, err);
+        }
+    
+        // 3. Fallback: LocalStorage laden, falls Datei nicht erreichbar war
+        const saved = localStorage.getItem('bma_scenario_presets');
+        if (saved) {
+            try {
+                this.presetAlarms = JSON.parse(saved);
+            } catch (e) {
+                console.error("Fehler beim Lesen aus localStorage:", e);
+                this.presetAlarms = [];
+            }
+        } else {
             this.presetAlarms = [];
         }
-
+    
         this.renderPresets();
     }
-
+    
     saveToStorage() {
         localStorage.setItem('bma_scenario_presets', JSON.stringify(this.presetAlarms));
     }
