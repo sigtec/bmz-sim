@@ -31,35 +31,56 @@ function initAudio() {
 }
 
 function playPiezoBeep() {
-    initAudio();
+    unlockAudio(); // Sicherstellen, dass Audio aktiv ist
     if (!audioCtx || buzzerSilenced || akustikAb || alarms.length === 0) return;
+    
     try {
         let osc = audioCtx.createOscillator();
         let gain = audioCtx.createGain();
         
+        // Rechteckwelle für den typischen "schrillen" DIN-Sommer-Sound
         osc.type = 'square';
-        osc.frequency.setValueAtTime(2800, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        
+        // Frequenz leicht angepasst für maximale Wahrnehmbarkeit auf kleinen Lautsprechern (3000 Hz)
+        osc.frequency.setValueAtTime(3000, audioCtx.currentTime);
+        
+        // Lautstärke von 0.04 auf 0.25 ERHÖHT (deutlich lauter!)
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
         
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.15);
-    } catch(e) {}
+        osc.stop(audioCtx.currentTime + 0.15); // Kurzer, prägnanter Beep
+    } catch(e) {
+        console.error("Audio Fehler:", e);
+    }
 }
 
 function updateBuzzerSound() {
     if (alarms.length > 0 && !buzzerSilenced && !akustikAb) {
         if (!buzzerInterval) {
             playPiezoBeep();
-            buzzerInterval = setInterval(playPiezoBeep, 400);
+            buzzerInterval = setInterval(playPiezoBeep, 400); // Intervall des Beeps
         }
     } else {
         if (buzzerInterval) {
             clearInterval(buzzerInterval);
             buzzerInterval = null;
         }
+    }
+}
+
+// Funktion zum Aktivieren des Audio-Systems bei JEDER ersten Interaktion
+function unlockAudio() {
+    if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
     }
 }
 
@@ -397,3 +418,7 @@ if ('serviceWorker' in navigator) {
 addAlarm(17, 5, 8, "aut Meld", "Raum 1.205 WC Herren");
 addAlarm(18, 5, 8, "aut Meld", "Raum 1.205 ZD");
 addAlarm(17, 1, 8, "aut Meld", "Raum 1.201 Flur 2.OG");
+
+// Globales Event Listening: Schaltet Audio ab dem allerersten Klick/Touch auf der Seite frei
+window.addEventListener('click', unlockAudio, { once: true });
+window.addEventListener('touchstart', unlockAudio, { once: true });
