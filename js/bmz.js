@@ -43,24 +43,30 @@ class BMZ {
             count: String(count).padStart(2, '0'),
             typeText: typeText,
             loc: loc.substring(0, 20),
-            read: false
+            read: false // Jeder Alarm startet rein als unread
         };
 
         this.alarms.push(newAlarm);
-        
         // Fokus auf die neueste Meldung setzen
         this.currentIndex = this.alarms.length - 1;
 
-        // Regel: Die ersten beiden Meldungen sind im Display direkt sichtbar und gelten somit als gelesen
-        if (this.alarms.length === 1) {
-            this.alarms[0].read = true;
-        } else if (this.alarms.length === 2) {
-            this.alarms[0].read = true;
-            this.alarms[1].read = true;
-        }
-        // Ab der 3. Meldung bleibt der neue Alarm read: false!
-
         this.buzzerSilenced = false;
+        this.notify();
+    }
+
+    // NEU: Speziell für den Systemstart / Initialzustand
+    markInitialAlarmsAsRead() {
+        if (this.alarms.length === 0) return;
+
+        // Die 1. Meldung steht IMMER oben im FAT -> gelesen
+        this.alarms[0].read = true;
+
+        // Wenn es mindestens 2 Meldungen gibt, steht die aktuell fokussierte (letzte) unten -> gelesen
+        if (this.alarms.length >= 2 && this.alarms[this.currentIndex]) {
+            this.alarms[this.currentIndex].read = true;
+        }
+
+        // Alle Meldungen dazwischen (z.B. Meldung 2 bei insgesamt 3 Alarmen) bleiben auf read: false!
         this.notify();
     }
 
@@ -71,7 +77,7 @@ class BMZ {
         if (targetIndex >= 0 && targetIndex < this.alarms.length) {
             this.currentIndex = targetIndex;
             
-            // Erst durch manuelles Annavigieren wird die Zielmeldung als gelesen markiert!
+            // Erst durch manuelles Durchscrollen wird die angelaufene Meldung gelesen
             if (this.alarms[this.currentIndex]) {
                 this.alarms[this.currentIndex].read = true;
             }
