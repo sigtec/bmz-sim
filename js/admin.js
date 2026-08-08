@@ -24,27 +24,31 @@ class AdminUI {
     }
 
     bindEvents() {
-        this.btnToggle.addEventListener('click', () => this.drawer.classList.toggle('open'));
-        this.btnClose.addEventListener('click', () => this.drawer.classList.remove('open'));
+        if (this.btnToggle) this.btnToggle.addEventListener('click', () => this.drawer?.classList.toggle('open'));
+        if (this.btnClose) this.btnClose.addEventListener('click', () => this.drawer?.classList.remove('open'));
 
-        this.btnAdd.addEventListener('click', () => {
-            this.bmz.addAlarm(
-                this.inputGroup.value,
-                this.inputDetector.value,
-                this.inputCount.value,
-                this.inputType.value,
-                this.inputLoc.value
-            );
-        });
+        if (this.btnAdd) {
+            this.btnAdd.addEventListener('click', () => {
+                this.bmz.addAlarm(
+                    this.inputGroup.value,
+                    this.inputDetector.value,
+                    this.inputCount.value,
+                    this.inputType.value,
+                    this.inputLoc.value
+                );
+            });
+        }
 
-        this.btnStoerung.addEventListener('click', () => this.bmz.toggleBMZStoerung());
-        this.btnLoesch.addEventListener('click', () => this.bmz.toggleLoeschanlage());
-        this.btnClear.addEventListener('click', () => this.bmz.resetBMZ());
+        if (this.btnStoerung) this.btnStoerung.addEventListener('click', () => this.bmz.toggleBMZStoerung());
+        if (this.btnLoesch) this.btnLoesch.addEventListener('click', () => this.bmz.toggleLoeschanlage());
+        if (this.btnClear) this.btnClear.addEventListener('click', () => this.bmz.resetBMZ());
     }
 
     render(state) {
+        if (!this.alarmListContainer) return;
+
         this.alarmListContainer.innerHTML = '';
-        if (state.alarms.length === 0) {
+        if (!state.alarms || state.alarms.length === 0) {
             this.alarmListContainer.innerHTML = '<span style="color:#666;">Keine aktiven Alarme</span>';
             return;
         }
@@ -52,8 +56,9 @@ class AdminUI {
         state.alarms.forEach((a, index) => {
             const div = document.createElement('div');
             div.className = 'alarm-item';
+            div.style.cssText = "display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.8rem; color:#fff;";
             div.innerHTML = `
-                <span>#${index + 1} [${a.group}/${a.detector}] ${a.typeText} - ${a.loc}</span>
+                <span>#${index + 1} [${a.group}/${a.detector}] ${a.typeText} - ${a.loc} (${a.read ? 'gelesen' : 'UNGELEN'})</span>
                 <button style="background:#d32f2f; color:#fff; border:none; padding:2px 6px; cursor:pointer;">Löschen</button>
             `;
             div.querySelector('button').addEventListener('click', () => this.bmz.removeAlarm(a.id));
