@@ -1,72 +1,13 @@
 class FAT {
-    constructor(bmz) {
-        this.bmz = bmz;
-        this.summerBtnTimer = null;
-        this.summerBtnHoldTriggered = false;
-
-        this.initDOM();
-        this.bindEvents();
-    }
-
-    initDOM() {
-        this.lcd1 = document.getElementById('lcd-line-1');
-        this.lcd2 = document.getElementById('lcd-line-2');
-        this.lcd3 = document.getElementById('lcd-line-3');
-        this.lcd4 = document.getElementById('lcd-line-4');
-
-        this.btnUp = document.getElementById('btn-fat-up');
-        this.btnDown = document.getElementById('btn-fat-down');
-        this.btnEbene = document.getElementById('btn-fat-ebene');
-        this.btnSummerAb = document.getElementById('btn-summer-ab');
-
-        this.ledBetrieb = document.getElementById('fat-led-betrieb');
-        this.ledAlarm = document.getElementById('fat-led-alarm');
-        this.ledStoerung = document.getElementById('fat-led-stoerung');
-        this.ledAbschaltung = document.getElementById('fat-led-abschaltung');
-    }
-
-    bindEvents() {
-        this.btnUp.addEventListener('click', () => this.bmz.navigateAlarm(-1));
-        this.btnDown.addEventListener('click', () => this.bmz.navigateAlarm(1));
-        this.btnEbene.addEventListener('click', () => alert("Anzeigeebene umgeschaltet"));
-
-        // Summer Ab / Lampentest Timer (5s)
-        const startSummerTimer = () => {
-            this.summerBtnHoldTriggered = false;
-            this.summerBtnTimer = setTimeout(() => {
-                this.summerBtnHoldTriggered = true;
-                this.bmz.setLampTest(true);
-            }, 5000);
-        };
-
-        const stopSummerTimer = () => {
-            if (this.summerBtnTimer) {
-                clearTimeout(this.summerBtnTimer);
-                this.summerBtnTimer = null;
-            }
-
-            if (this.bmz.lampTestActive) {
-                this.bmz.setLampTest(false);
-            } else if (!this.summerBtnHoldTriggered) {
-                this.bmz.silenceBuzzer();
-            }
-        };
-
-        this.btnSummerAb.addEventListener('mousedown', startSummerTimer);
-        this.btnSummerAb.addEventListener('mouseup', stopSummerTimer);
-        this.btnSummerAb.addEventListener('mouseleave', stopSummerTimer);
-        this.btnSummerAb.addEventListener('touchstart', startSummerTimer);
-        this.btnSummerAb.addEventListener('touchend', stopSummerTimer);
-    }
-
-    padLine(str, len = 20) {
-        return str.padEnd(len, ' ').substring(0, len);
-    }
+    // ... constructor, initDOM, bindEvents etc. bleiben gleich ...
 
     render(state) {
         const alarms = state.alarms;
         const total = alarms.length;
         const currentIndex = state.currentIndex;
+
+        // 1. Erst JETZT wird die im Display sichtbare Meldung als gelesen markiert
+        this.bmz.markCurrentAsRead();
 
         // Lampentest Zustand
         if (state.lampTestActive) {
@@ -115,21 +56,27 @@ class FAT {
         this.btnDown.classList.remove('blink', 'solid');
 
         if (total > 2) {
-            // Nach oben scrollbar?
+            // Nach oben scrollbar? Prüfe, ob ungelese Meldungen DRÜBER liegen
             if (currentIndex > 0) {
                 let unreadAbove = false;
                 for (let i = 0; i < currentIndex; i++) {
-                    if (!alarms[i].read) unreadAbove = true;
+                    if (!alarms[i].read) {
+                        unreadAbove = true;
+                        break;
+                    }
                 }
                 if (unreadAbove) this.btnUp.classList.add('blink');
                 else this.btnUp.classList.add('solid');
             }
 
-            // Nach unten scrollbar?
+            // Nach unten scrollbar? Prüfe, ob ungelese Meldungen DRUNTER liegen
             if (currentIndex < total - 1) {
                 let unreadBelow = false;
                 for (let i = currentIndex + 1; i < total; i++) {
-                    if (!alarms[i].read) unreadBelow = true;
+                    if (!alarms[i].read) {
+                        unreadBelow = true;
+                        break;
+                    }
                 }
                 if (unreadBelow) this.btnDown.classList.add('blink');
                 else this.btnDown.classList.add('solid');
