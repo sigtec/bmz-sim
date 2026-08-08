@@ -33,4 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bmz.addAlarm(17, 5, 8, "aut Meld", "Raum 1.205 WC Herren");
     bmz.addAlarm(18, 5, 8, "aut Meld", "Raum 1.205 ZD");
     bmz.addAlarm(17, 1, 8, "aut Meld", "Raum 1.201 Flur 2.OG");
+
+    // 5. Erstes und letztes Display-Fenster als gelesen deklarieren (Initialzustand herstellen)
+    bmz.markInitialAlarmsAsRead();
 });
