@@ -1,7 +1,9 @@
-const CACHE_NAME = 'bmz-sim-v1';
+const CACHE_NAME = 'bmz-sim-v2';
 const ASSETS = [
   './',
   './index.html',
+  './style.css',
+  './script.js',
   './manifest.json'
 ];
 
