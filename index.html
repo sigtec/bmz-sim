@@ -173,84 +173,38 @@
     <div id="admin-drawer" class="admin-drawer">
         <div class="admin-header">
             <h3>Übungsleiter Steuerkonsole</h3>
-            <button id="btn-close-admin">&times;</button>
         </div>
     
-        <!-- 1. Szenario Management (JSON Import / Export & Presets) -->
+        <!-- 1. Top-Befehlszeile mit Buttons -->
         <div class="admin-section">
-            <h4>Szenario-Verwaltung</h4>
-            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                <button id="btn-adm-export" style="flex: 1; padding: 6px; cursor: pointer;">Export (JSON)</button>
-                <button id="btn-adm-import-trigger" style="flex: 1; padding: 6px; cursor: pointer;">Laden (JSON)</button>
-                <!-- Verstecktes File-Input für den JSON-Import -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button id="btn-adm-new" style="flex: 1; min-width: 60px; padding: 6px; background: #2b5c8f; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Neu</button>
+                <button id="btn-adm-import-trigger" style="flex: 1; min-width: 60px; padding: 6px; cursor: pointer;">Import</button>
+                <button id="btn-adm-export" style="flex: 1; min-width: 60px; padding: 6px; cursor: pointer;">Export</button>
+                <button id="btn-adm-clear" style="flex: 1; min-width: 60px; padding: 6px; background: #8c2b2b; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Reset</button>
+                <button id="btn-close-admin" style="flex: 1; min-width: 60px; padding: 6px; background: #555; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Schließen</button>
+                <!-- Verstecktes File-Input für Import -->
                 <input type="file" id="input-adm-file" accept=".json" style="display: none;">
             </div>
-            <button id="btn-adm-load-default" style="width: 100%; padding: 6px; cursor: pointer;">Standard-Szenario laden</button>
         </div>
     
-        <!-- 2. Vorbereitete Alarm-Schleifen (Dynamisches Auslösen per Klick) -->
+        <!-- 2. Aktive Schleifen in der BMA -->
         <div class="admin-section">
-            <h4>Vorbereitete Alarm-Schleifen</h4>
-            <div id="admin-preset-list" class="preset-list">
-                <!-- Wird dynamisch durch AdminUI (js/admin.js) befüllt -->
-            </div>
-        </div>
-    
-        <!-- 3. Manuelle Alarm-Eingabe (Spontane Alarme) -->
-        <div class="admin-section">
-            <h4>Spontaner / Manueller Alarm</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                <div>
-                    <label style="font-size: 0.75rem; color: #ccc; display: block;">Gruppe</label>
-                    <input type="number" id="adm-group" value="17" style="width: 100%; padding: 4px; box-sizing: border-box;">
-                </div>
-                <div>
-                    <label style="font-size: 0.75rem; color: #ccc; display: block;">Melder</label>
-                    <input type="number" id="adm-detector" value="1" style="width: 100%; padding: 4px; box-sizing: border-box;">
-                </div>
-            </div>
-    
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                <div>
-                    <label style="font-size: 0.75rem; color: #ccc; display: block;">Anzahl</label>
-                    <input type="number" id="adm-count" value="1" style="width: 100%; padding: 4px; box-sizing: border-box;">
-                </div>
-                <div>
-                    <label style="font-size: 0.75rem; color: #ccc; display: block;">Meldungsart</label>
-                    <select id="adm-type" style="width: 100%; padding: 4px; box-sizing: border-box;">
-                        <option value="aut Meld">aut Meld</option>
-                        <option value="Handmeld">Handmeld</option>
-                        <option value="Störung">Störung</option>
-                    </select>
-                </div>
-            </div>
-    
-            <div style="margin-bottom: 8px;">
-                <label style="font-size: 0.75rem; color: #ccc; display: block;">Standorttext (max 20 Zeichen)</label>
-                <input type="text" id="adm-loc" value="Raum 1.201 Flur" maxlength="20" style="width: 100%; padding: 4px; box-sizing: border-box;">
-            </div>
-    
-            <button id="btn-adm-add" style="width: 100%; padding: 6px; background: #d32f2f; color: #fff; border: none; font-weight: bold; cursor: pointer; border-radius: 3px;">Alarm Auslösen</button>
-        </div>
-    
-        <!-- 4. BMZ-Zustandssteuerungen (Störung, Löschung, Reset) -->
-        <div class="admin-section">
-            <h4>BMZ-Zustände</h4>
-            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-                <button id="btn-adm-stoerung" style="flex: 1; padding: 6px; cursor: pointer;">Störung Toggle</button>
-                <button id="btn-adm-loesch" style="flex: 1; padding: 6px; cursor: pointer;">Löschung Toggle</button>
-            </div>
-            <button id="btn-adm-clear" style="width: 100%; padding: 6px; background: #444; color: #fff; border: none; cursor: pointer; border-radius: 3px;">BMZ Komplett Reset</button>
-        </div>
-    
-        <!-- 5. Aktive Alarme in der BMA (Übersicht & Löschen) -->
-        <div class="admin-section">
-            <h4>Aktive Alarme in BMZ</h4>
+            <h4>Aktive Schleifen</h4>
             <div id="admin-alarm-list">
-                <!-- Wird dynamisch von admin.js gerendert -->
+                <!-- Dynamisch durch js/admin.js -->
             </div>
         </div>
-    </div>    
+    
+        <!-- 3. Verfügbare Schleifen (Presets) -->
+        <div class="admin-section">
+            <h4>Verfügbare Schleifen</h4>
+            <div id="admin-preset-list" class="preset-list">
+                <!-- Dynamisch durch js/admin.js -->
+            </div>
+        </div>
+    </div>
+
 
     <!-- Klassen-Skripte strukturieren -->
     <script src="js/fbf.js"></script>
