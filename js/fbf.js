@@ -1,12 +1,8 @@
 class FBF {
     constructor(bmz) {
         this.bmz = bmz;
-        
-        // Audio Engine
         this.audioCtx = null;
         this.buzzerInterval = null;
-        
-        // Timer
         this.resetHoldTimer = null;
 
         this.initDOM();
@@ -33,51 +29,55 @@ class FBF {
     }
 
     bindEvents() {
-        this.btnBrandfall.addEventListener('click', () => this.bmz.toggleBrandfallSteuerung());
-        this.btnAkustik.addEventListener('click', () => this.bmz.toggleAkustischeSignale());
-        this.btnUeAb.addEventListener('click', () => this.bmz.toggleUeAb());
+        if (this.btnBrandfall) this.btnBrandfall.addEventListener('click', () => this.bmz.toggleBrandfallSteuerung());
+        if (this.btnAkustik) this.btnAkustik.addEventListener('click', () => this.bmz.toggleAkustischeSignale());
+        if (this.btnUeAb) this.btnUeAb.addEventListener('click', () => this.bmz.toggleUeAb());
 
-        this.flapBmz.addEventListener('click', () => this.flapBmz.classList.toggle('open'));
-        this.flapUe.addEventListener('click', () => this.flapUe.classList.toggle('open'));
+        if (this.flapBmz) this.flapBmz.addEventListener('click', () => this.flapBmz.classList.toggle('open'));
+        if (this.flapUe) this.flapUe.addEventListener('click', () => this.flapUe.classList.toggle('open'));
 
-        this.btnUeTest.addEventListener('click', () => {
-            if (!this.flapUe.classList.contains('open')) {
-                alert("Bitte zuerst die Schutzklappe öffnen!");
-                return;
-            }
-            alert("ÜE Verbindung wird geprüft... OK!");
-        });
+        if (this.btnUeTest) {
+            this.btnUeTest.addEventListener('click', () => {
+                if (!this.flapUe || !this.flapUe.classList.contains('open')) {
+                    alert("Bitte zuerst die Schutzklappe öffnen!");
+                    return;
+                }
+                alert("ÜE Verbindung wird geprüft... OK!");
+            });
+        }
 
-        // 5s Reset-Timer Event Listeners
-        const startReset = (e) => {
-            if (e) e.preventDefault();
-            if (!this.flapBmz.classList.contains('open')) {
-                alert("Bitte zuerst die Schutzklappe öffnen!");
-                return;
-            }
-            this.btnBmzReset.classList.add('pressed');
-            this.resetHoldTimer = setTimeout(() => {
+        // 5s Reset Hold Timer
+        if (this.btnBmzReset) {
+            const startReset = (e) => {
+                if (e) e.preventDefault();
+                if (!this.flapBmz || !this.flapBmz.classList.contains('open')) {
+                    alert("Bitte zuerst die Schutzklappe öffnen!");
+                    return;
+                }
+                this.btnBmzReset.classList.add('pressed');
+                this.resetHoldTimer = setTimeout(() => {
+                    this.btnBmzReset.classList.remove('pressed');
+                    this.bmz.resetBMZ();
+                }, 5000);
+            };
+
+            const stopReset = (e) => {
+                if (e) e.preventDefault();
                 this.btnBmzReset.classList.remove('pressed');
-                this.bmz.resetBMZ();
-            }, 5000);
-        };
+                if (this.resetHoldTimer) {
+                    clearTimeout(this.resetHoldTimer);
+                    this.resetHoldTimer = null;
+                }
+            };
 
-        const stopReset = (e) => {
-            if (e) e.preventDefault();
-            this.btnBmzReset.classList.remove('pressed');
-            if (this.resetHoldTimer) {
-                clearTimeout(this.resetHoldTimer);
-                this.resetHoldTimer = null;
-            }
-        };
+            this.btnBmzReset.addEventListener('mousedown', startReset);
+            this.btnBmzReset.addEventListener('mouseup', stopReset);
+            this.btnBmzReset.addEventListener('mouseleave', stopReset);
+            this.btnBmzReset.addEventListener('touchstart', startReset);
+            this.btnBmzReset.addEventListener('touchend', stopReset);
+        }
 
-        this.btnBmzReset.addEventListener('mousedown', startReset);
-        this.btnBmzReset.addEventListener('mouseup', stopReset);
-        this.btnBmzReset.addEventListener('mouseleave', stopReset);
-        this.btnBmzReset.addEventListener('touchstart', startReset);
-        this.btnBmzReset.addEventListener('touchend', stopReset);
-
-        // Globaler Audio-Unlocker bei erster Berührung
+        // Audio bei Interaktion freischalten
         const unlock = () => this.unlockAudio();
         window.addEventListener('click', unlock, { once: true });
         window.addEventListener('touchstart', unlock, { once: true });
@@ -103,7 +103,7 @@ class FBF {
 
             osc.type = 'square';
             osc.frequency.setValueAtTime(3000, this.audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.25, this.audioCtx.currentTime); // Lauter Piepton
+            gain.gain.setValueAtTime(0.25, this.audioCtx.currentTime);
 
             osc.connect(gain);
             gain.connect(this.audioCtx.destination);
@@ -128,12 +128,12 @@ class FBF {
     }
 
     render(state) {
-        this.ledBetrieb.classList.add('active');
-        this.ledUeAusgeloest.classList.toggle('active', state.alarms.length > 0 && !state.ueAb);
-        this.ledLoeschanlage.classList.toggle('active', state.loeschanlageAusgeloest);
-        this.ledBrandfall.classList.toggle('active', state.brandfallAb);
-        this.ledAkustik.classList.toggle('active', state.akustikAb);
-        this.ledUeAb.classList.toggle('active', state.ueAb);
+        this.ledBetrieb?.classList.add('active');
+        this.ledUeAusgeloest?.classList.toggle('active', state.alarms.length > 0 && !state.ueAb);
+        this.ledLoeschanlage?.classList.toggle('active', !!state.loeschanlageAusgeloest);
+        this.ledBrandfall?.classList.toggle('active', !!state.brandfallAb);
+        this.ledAkustik?.classList.toggle('active', !!state.akustikAb);
+        this.ledUeAb?.classList.toggle('active', !!state.ueAb);
 
         this.updateBuzzerSound();
     }
