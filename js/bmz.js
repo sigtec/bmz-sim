@@ -3,6 +3,7 @@ class BMZ {
         this.alarms = [];
         this.currentIndex = 0;
         
+        // Zustände
         this.buzzerSilenced = false;
         this.brandfallAb = false;
         this.akustikAb = false;
@@ -19,7 +20,6 @@ class BMZ {
     }
 
     notify() {
-        // HIER NICHT MEHR AUTOMATISCH auf read = true SETZEN!
         const state = {
             alarms: this.alarms,
             currentIndex: this.currentIndex,
@@ -35,19 +35,6 @@ class BMZ {
         this.subscribers.forEach(callback => callback(state));
     }
 
-    // Neue Methode: Gezielt eine Meldung als gelesen markieren
-   markCurrentAsRead() {
-    if (this.alarms.length > 0) {
-        // 1. Die erste Meldung ist auf dem FAT IMMER in Zeile 1/2 sichtbar -> read = true
-        this.alarms[0].read = true;
-
-        // 2. Die im unteren Displaybereich aktive Meldung ebenfalls -> read = true
-        if (this.alarms[this.currentIndex]) {
-            this.alarms[this.currentIndex].read = true;
-        }
-    }
-  }
-
     addAlarm(group, detector, count, typeText, loc) {
         const newAlarm = {
             id: Date.now() + Math.random(),
@@ -56,20 +43,39 @@ class BMZ {
             count: String(count).padStart(2, '0'),
             typeText: typeText,
             loc: loc.substring(0, 20),
-            read: false // Alle neuen Alarme starten IMMER unread
+            read: false
         };
 
         this.alarms.push(newAlarm);
+        
+        // Fokus auf die neueste Meldung setzen
         this.currentIndex = this.alarms.length - 1;
+
+        // Regel: Die ersten beiden Meldungen sind im Display direkt sichtbar und gelten somit als gelesen
+        if (this.alarms.length === 1) {
+            this.alarms[0].read = true;
+        } else if (this.alarms.length === 2) {
+            this.alarms[0].read = true;
+            this.alarms[1].read = true;
+        }
+        // Ab der 3. Meldung bleibt der neue Alarm read: false!
+
         this.buzzerSilenced = false;
         this.notify();
     }
 
     navigateAlarm(dir) {
         if (this.alarms.length <= 2) return;
+        
         let targetIndex = this.currentIndex + dir;
         if (targetIndex >= 0 && targetIndex < this.alarms.length) {
             this.currentIndex = targetIndex;
+            
+            // Erst durch manuelles Annavigieren wird die Zielmeldung als gelesen markiert!
+            if (this.alarms[this.currentIndex]) {
+                this.alarms[this.currentIndex].read = true;
+            }
+            
             this.notify();
         }
     }
