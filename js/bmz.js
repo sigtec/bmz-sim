@@ -36,11 +36,17 @@ class BMZ {
     }
 
     // Neue Methode: Gezielt eine Meldung als gelesen markieren
-    markCurrentAsRead() {
-        if (this.alarms.length > 0 && this.alarms[this.currentIndex] && !this.alarms[this.currentIndex].read) {
+   markCurrentAsRead() {
+    if (this.alarms.length > 0) {
+        // 1. Die erste Meldung ist auf dem FAT IMMER in Zeile 1/2 sichtbar -> read = true
+        this.alarms[0].read = true;
+
+        // 2. Die im unteren Displaybereich aktive Meldung ebenfalls -> read = true
+        if (this.alarms[this.currentIndex]) {
             this.alarms[this.currentIndex].read = true;
         }
     }
+}
 
     addAlarm(group, detector, count, typeText, loc) {
         const newAlarm = {
