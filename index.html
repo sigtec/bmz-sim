@@ -13,4 +13,977 @@
     <meta name="apple-mobile-web-app-title" content="BMZ Sim">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ff0000'/><text x='50' y='65' font-size='50' font-weight='bold' fill='%23ffffff' text-anchor='middle'>FAT</text></svg>">
 
-    <!-- CSS / Style-Block folgt hier wie gehabt -->
+    <style>
+        :root {
+            --din-red: #ff0000;
+            --panel-black: #000000;
+            --grid-line: #ffffff;
+            --lcd-green: #22d022;
+            --lcd-text: #000000;
+            --led-off: #222222;
+            --led-green: #00ff00;
+            --led-red: #ff0000;
+            --led-yellow: #ffcc00;
+            --btn-gray: linear-gradient(135deg, #eeeeee 0%, #cccccc 50%, #999999 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px;
+            overflow-y: auto;
+            touch-action: manipulation;
+        }
+
+        .top-nav {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .btn-utility {
+            background: #222;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-utility:hover { background: #333; }
+
+        /* Hauptgehäuse */
+        .din-container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Standard DIN Panel Rahmen */
+        .din-panel {
+            background-color: var(--panel-black);
+            border: 14px solid var(--din-red);
+            outline: 3px solid #000;
+            padding: 12px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+        }
+
+        .panel-title {
+            color: #ffffff;
+            font-size: 1.45rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- FAT DISPLAY --- */
+        .fat-display-section {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fat-labels {
+            width: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: right;
+            padding-right: 4px;
+        }
+
+        .fat-labels .header-label {
+            font-size: 0.6rem;
+            margin-bottom: 6px;
+        }
+
+        .fat-labels .msg-label {
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            line-height: 1.1;
+        }
+
+        .fat-lcd-box {
+            flex: 1;
+            background-color: var(--lcd-green);
+            border: 2px solid #fff;
+            padding: 4px 6px;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+        }
+
+        .fat-lcd-line {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--lcd-text);
+            white-space: pre;
+            line-height: 1.2;
+            height: 1.1em;
+        }
+
+        .lcd-divider {
+            border-bottom: 1px solid #000;
+            margin: 3px 0;
+        }
+
+        /* FAT Grid Controls */
+        .fat-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1.1fr 1fr;
+            border: 2px solid var(--grid-line);
+        }
+
+        .fat-col {
+            border-right: 2px solid var(--grid-line);
+            padding: 8px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 170px;
+        }
+
+        .fat-col:last-child { border-right: none; }
+
+        .arrow-icon {
+            font-size: 1.5rem;
+            color: #ffffff;
+            line-height: 1;
+        }
+
+        .label-text {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            margin: 3px 0;
+        }
+
+        /* Taster Styles */
+        .din-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--btn-gray);
+            border: 2px solid #ffffff;
+            box-shadow: inset 1px 1px 2px #fff, inset -1px -1px 2px #000, 0 2px 4px rgba(0,0,0,0.5);
+            cursor: pointer;
+            position: relative;
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+
+        .din-btn:active, .din-btn.pressed {
+            box-shadow: inset -1px -1px 2px #fff, inset 1px 1px 2px #000;
+            transform: translateY(1px);
+        }
+
+        /* Taster-Zustände (Gelesen / Ungelesen) */
+        .din-btn.solid {
+            background: var(--led-yellow) !important;
+            box-shadow: 0 0 10px var(--led-yellow);
+        }
+
+        @keyframes btn-blink-yellow {
+            0%, 100% { background: var(--btn-gray); box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+            50% { background: var(--led-yellow); box-shadow: 0 0 12px var(--led-yellow); }
+        }
+
+        .din-btn.blink {
+            animation: btn-blink-yellow 0.8s infinite;
+        }
+
+        /* LEDs */
+        .led-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 8px;
+            margin: 4px 0;
+            padding-left: 6px;
+        }
+
+        .led {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: var(--led-off);
+            border: 1px solid #444;
+            flex-shrink: 0;
+        }
+
+        .led.green.active { background-color: var(--led-green); box-shadow: 0 0 8px var(--led-green); }
+        .led.red.active { background-color: var(--led-red); box-shadow: 0 0 8px var(--led-red); }
+        .led.yellow.active { background-color: var(--led-yellow); box-shadow: 0 0 8px var(--led-yellow); }
+
+        /* --- FBF STYLING --- */
+        .fbf-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border: 2px solid var(--grid-line);
+        }
+
+        .fbf-cell {
+            border-bottom: 2px solid var(--grid-line);
+            border-right: 2px solid var(--grid-line);
+            padding: 8px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .fbf-cell:nth-child(2n) { border-right: none; }
+        .fbf-cell:nth-last-child(1), .fbf-cell:nth-last-child(2) { border-bottom: none; }
+
+        .fbf-cell-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .ue-box {
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid #000;
+            width: 60px;
+            height: 18px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Schutzklappe */
+        .flap-container {
+            position: relative;
+            width: 44px;
+            height: 44px;
+        }
+
+        .protective-flap {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(80, 80, 80, 0.85);
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+            cursor: pointer;
+            z-index: 5;
+            transition: transform 0.3s ease;
+            transform-origin: top;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .protective-flap::after {
+            content: 'KLAPPE';
+            font-size: 0.45rem;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .protective-flap.open {
+            transform: rotateX(110deg);
+            pointer-events: none;
+        }
+
+        /* --- ADMIN DRAWER --- */
+        .admin-drawer {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: #1e1e1e;
+            border-top: 4px solid #ffaa00;
+            padding: 15px;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.9);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 100;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .admin-drawer.open { transform: translateY(0); }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffaa00;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .admin-grid input, .admin-grid select {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 4px 6px;
+            font-size: 0.8rem;
+            border-radius: 3px;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-adm {
+            background: #ffaa00;
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .btn-adm-red { background: #d32f2f; color: #fff; }
+
+        .active-alarms-list {
+            margin-top: 10px;
+            border-top: 1px solid #444;
+            padding-top: 6px;
+            font-size: 0.75rem;
+        }
+
+        .alarm-item {
+            display: flex;
+            justify-content: space-between;
+            background: #2a2a2a;
+            padding: 4px 8px;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <span style="font-size: 0.8rem; color: #aaa;">Erstinformationsstelle DIN 14675</span>
+        <div>
+            <button class="btn-utility" onclick="toggleFullscreen()">Vollbild</button>
+            <button class="btn-utility" style="border-color:#ffaa00; color:#ffaa00;" onclick="toggleAdmin()">Admin-Oberfläche</button>
+        </div>
+    </div>
+
+    <div class="din-container">
+        
+        <!-- FEUERWEHR-ANZEIGETABLEAU (FAT) -->
+        <div class="din-panel">
+            <div class="panel-title">Feuerwehr-Anzeigetableau</div>
+
+            <div class="fat-display-section">
+                <div class="fat-labels">
+                    <div class="header-label">Meldergruppe/Melder</div>
+                    <div class="msg-label">erste<br>Meldung</div>
+                    <div class="msg-label">letzte<br>Meldung</div>
+                </div>
+
+                <div class="fat-lcd-box">
+                    <div id="lcd-line-1" class="fat-lcd-line"></div>
+                    <div id="lcd-line-2" class="fat-lcd-line"></div>
+                    <div class="lcd-divider"></div>
+                    <div id="lcd-line-3" class="fat-lcd-line"></div>
+                    <div id="lcd-line-4" class="fat-lcd-line"></div>
+                </div>
+            </div>
+
+            <div class="fat-grid">
+                <!-- Spalte 1: Navigation -->
+                <div class="fat-col">
+                    <span class="arrow-icon">▲</span>
+                    <button id="btn-fat-up" class="din-btn" onclick="navigateAlarm(-1)"></button>
+                    <span class="label-text">weitere Meldungen</span>
+                    <button id="btn-fat-down" class="din-btn" onclick="navigateAlarm(1)"></button>
+                    <span class="arrow-icon">▼</span>
+                </div>
+
+                <!-- Spalte 2: Anzeigeebene & Summer ab -->
+                <div class="fat-col">
+                    <div style="display:flex; flex-direction:column; align-items:center;">
+                        <span class="label-text">Anzeigeebene</span>
+                        <button class="din-btn" onclick="toggleAnzeigeebene()"></button>
+                        <span class="label-text" style="font-size:0.55rem; color:#ccc;">>5sec. Historie</span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:center; margin-top:8px;">
+                        <span class="label-text">Summer ab</span>
+                        <button id="btn-summer-ab" class="din-btn"
+                                onmousedown="startSummerBtnTimer()" 
+                                onmouseup="stopSummerBtnTimer()"
+                                onmouseleave="stopSummerBtnTimer()"
+                                ontouchstart="startSummerBtnTimer()"
+                                ontouchend="stopSummerBtnTimer()"></button>
+                        <span class="label-text" style="font-size:0.55rem; color:#ccc;">>5sec. Test</span>
+                    </div>
+                </div>
+
+                <!-- Spalte 3: LEDs -->
+                <div class="fat-col" style="justify-content: center;">
+                    <div class="led-row">
+                        <div id="fat-led-betrieb" class="led green active"></div>
+                        <span class="label-text">Betrieb</span>
+                    </div>
+                    <div class="led-row">
+                        <div id="fat-led-alarm" class="led red"></div>
+                        <span class="label-text">Alarm</span>
+                    </div>
+                    <div class="led-row">
+                        <div id="fat-led-stoerung" class="led yellow"></div>
+                        <span class="label-text">Störung</span>
+                    </div>
+                    <div class="led-row">
+                        <div id="fat-led-abschaltung" class="led yellow"></div>
+                        <span class="label-text">Abschaltung</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FEUERWEHR-BEDIENFELD (FBF) -->
+        <div class="din-panel">
+            <div class="panel-title">Feuerwehr - Bedienfeld</div>
+
+            <div class="fbf-grid">
+                <!-- Zeile 1 -->
+                <div class="fbf-cell">
+                    <div class="fbf-cell-content">
+                        <div id="fbf-led-betrieb" class="led green active"></div>
+                        <span class="label-text" style="text-align:left;">Bedienfeld<br>in Betrieb</span>
+                    </div>
+                </div>
+                <div class="fbf-cell">
+                    <div class="fbf-cell-content">
+                        <div id="fbf-led-ue-ausgeloest" class="led red"></div>
+                        <span class="label-text" style="text-align:left;">ÜE<br>ausgelöst</span>
+                    </div>
+                </div>
+
+                <!-- Zeile 2 -->
+                <div class="fbf-cell">
+                    <div class="fbf-cell-content">
+                        <div id="fbf-led-loeschanlage" class="led red"></div>
+                        <span class="label-text" style="text-align:left;">Löschanlage<br>ausgelöst</span>
+                    </div>
+                </div>
+                <div class="fbf-cell">
+                    <div class="fbf-cell-content">
+                        <div id="fbf-led-brandfall" class="led yellow"></div>
+                        <span class="label-text" style="text-align:left;">Brandfall-<br>Steuerungen<br>ab</span>
+                    </div>
+                    <button class="din-btn" onclick="toggleBrandfallSteuerung()"></button>
+                </div>
+
+                <!-- Zeile 3 -->
+                <div class="fbf-cell">
+                    <div class="fbf-cell-content">
+                        <div id="fbf-led-akustik" class="led yellow"></div>
+                        <span class="label-text" style="text-align:left;">Akustische<br>Signale ab</span>
+                    </div>
+                    <button class="din-btn" onclick="toggleAkustischeSignale()"></button>
+                </div>
+                <div class="fbf-cell">
+                    <div class="fbf-cell-content">
+                        <div id="fbf-led-bmz-reset" class="led red"></div>
+                        <span class="label-text" style="text-align:left;">BMZ<br>rückstellen</span>
+                    </div>
+                    <div class="flap-container">
+                        <div id="flap-bmz" class="protective-flap" onclick="toggleFlap('flap-bmz')"></div>
+                        <button id="btn-bmz-reset" class="din-btn"
+                                onmousedown="startResetHold(event)"
+                                onmouseup="stopResetHold(event)"
+                                onmouseleave="stopResetHold(event)"
+                                ontouchstart="startResetHold(event)"
+                                ontouchend="stopResetHold(event)"></button>
+                    </div>
+                </div>
+
+                <!-- Zeile 4 -->
+                <div class="fbf-cell">
+                    <div class="fbf-cell-content">
+                        <div id="fbf-led-ue-ab" class="led yellow"></div>
+                        <span class="label-text" style="text-align:left;">ÜE ab</span>
+                    </div>
+                    <button class="din-btn" onclick="toggleUeAb()"></button>
+                </div>
+                <div class="fbf-cell">
+                    <div class="fbf-cell-content" style="flex-direction:column; align-items:flex-start; justify-content:center;">
+                        <span class="label-text" style="margin:0;">ÜE Nr.</span>
+                        <div class="ue-box" id="ue-nr-display">001</div>
+                        <span class="label-text" style="margin:0;">prüfen</span>
+                    </div>
+                    <div class="flap-container">
+                        <div id="flap-ue" class="protective-flap" onclick="toggleFlap('flap-ue')"></div>
+                        <button class="din-btn" onclick="testUe()"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ADMIN DRAWER -->
+    <div class="admin-drawer" id="admin-drawer">
+        <div class="admin-header">
+            <span>ADMINISTRATOR SIMULATION</span>
+            <button class="btn-utility" onclick="toggleAdmin()">Schließen ✕</button>
+        </div>
+
+        <div class="admin-grid">
+            <div>
+                <label class="label-text">Gruppe</label>
+                <input type="number" id="adm-group" value="121">
+            </div>
+            <div>
+                <label class="label-text">Melder</label>
+                <input type="number" id="adm-detector" value="15">
+            </div>
+            <div>
+                <label class="label-text">Melderanzahl</label>
+                <input type="number" id="adm-count" value="19">
+            </div>
+            <div>
+                <label class="label-text">Meldeart</label>
+                <select id="adm-type">
+                    <option value="aut Meld">aut Meld (Automatisch)</option>
+                    <option value="Hand-Meld">Hand-Meld (Druckknopf)</option>
+                    <option value="Sprinkler">Sprinkler</option>
+                    <option value="Gasalarm">Gasalarm</option>
+                </select>
+            </div>
+            <div>
+                <label class="label-text">Ort (Zeile 2)</label>
+                <input type="text" id="adm-loc" value="2.OG Rechenzentrum">
+            </div>
+        </div>
+
+        <div class="admin-actions">
+            <button class="btn-adm" onclick="addAlarmFromAdmin()">+ Alarm Auslösen</button>
+            <button class="btn-adm btn-adm-red" onclick="toggleBMZStoerung()">Störung BMZ Umschalten</button>
+            <button class="btn-adm btn-adm-red" onclick="toggleLoeschanlage()">Löschanlage Auslösen</button>
+            <button class="btn-adm btn-adm-red" onclick="clearAllAlarms()">Alle Alarme Löschen</button>
+        </div>
+
+        <div class="active-alarms-list">
+            <span style="color:#aaa;">Aktive Alarme im Speicher:</span>
+            <div id="admin-alarm-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // System-Zustände
+        let alarms = [];
+        let currentIndex = 0;
+        let buzzerSilenced = false;
+        let brandfallAb = false;
+        let akustikAb = false;
+        let ueAb = false;
+        let bmzStoerung = false;
+        let loeschanlageAusgeloest = false;
+        let lampTestActive = false;
+
+        // Timer Handles
+        let resetHoldTimer = null;
+        let resetTriggered = false;
+        let summerBtnTimer = null;
+        let summerBtnHoldTriggered = false;
+
+        // Web Audio API Sounder Engine
+        let audioCtx = null;
+        let buzzerInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playPiezoBeep() {
+            initAudio();
+            if (!audioCtx || buzzerSilenced || akustikAb || alarms.length === 0) return;
+            try {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                
+                // Charakteristischer hoher Piezo-Intervallton (2,8 kHz)
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(2800, audioCtx.currentTime);
+                
+                // Angenehme Tablet-Lautstärke
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15); // 150ms Beep
+            } catch(e) {}
+        }
+
+        function updateBuzzerSound() {
+            if (alarms.length > 0 && !buzzerSilenced && !akustikAb) {
+                if (!buzzerInterval) {
+                    playPiezoBeep();
+                    buzzerInterval = setInterval(playPiezoBeep, 400); // 2,5 Hz Pulsieren
+                }
+            } else {
+                if (buzzerInterval) {
+                    clearInterval(buzzerInterval);
+                    buzzerInterval = null;
+                }
+            }
+        }
+
+        function padLine(str, len = 20) {
+            return str.padEnd(len, ' ').substring(0, len);
+        }
+
+        function addAlarm(group, detector, count, typeText, loc) {
+            initAudio();
+            
+            const newAlarm = {
+                id: Date.now(),
+                group: String(group).padStart(3, '0'),
+                detector: String(detector).padStart(2, '0'),
+                count: String(count).padStart(2, '0'),
+                typeText: typeText,
+                loc: loc.substring(0, 20),
+                read: false // Standard: Ungelesen
+            };
+            
+            alarms.push(newAlarm);
+            
+            // Wichtig (Punkt 3): Bei JEDER neu auflaufenden Meldung wird der Summer automatisch re-aktiviert!
+            buzzerSilenced = false;
+            
+            updateDisplay();
+            updateAdminList();
+        }
+
+        function navigateAlarm(dir) {
+            if (alarms.length === 0) return;
+            
+            currentIndex += dir;
+            if (currentIndex < 0) currentIndex = alarms.length - 1;
+            if (currentIndex >= alarms.length) currentIndex = 0;
+            
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const total = alarms.length;
+
+            // Der aktuell angezeigte Alarm gilt als "gelesen"
+            if (total > 0 && alarms[currentIndex]) {
+                alarms[currentIndex].read = true;
+            }
+
+            // Lampentest Override (> 5 sec Summer ab)
+            if (lampTestActive) {
+                document.getElementById('lcd-line-1').innerText = "####################";
+                document.getElementById('lcd-line-2').innerText = "####################";
+                document.getElementById('lcd-line-3').innerText = "####################";
+                document.getElementById('lcd-line-4').innerText = "####################";
+                setAllLEDs(true);
+                return;
+            }
+
+            // FAT Display Renders
+            if (total === 0) {
+                document.getElementById('lcd-line-1').innerText = padLine("BMZ BETRIEBSBEREIT");
+                document.getElementById('lcd-line-2').innerText = padLine("");
+                document.getElementById('lcd-line-3').innerText = padLine("KEINE MELDUNGEN");
+                document.getElementById('lcd-line-4').innerText = padLine("");
+            } else if (total === 1) {
+                const a = alarms[0];
+                const line13 = `${a.group}/${a.detector} ${a.count} ${a.typeText}`;
+                document.getElementById('lcd-line-1').innerText = padLine(line13);
+                document.getElementById('lcd-line-2').innerText = padLine(a.loc);
+                document.getElementById('lcd-line-3').innerText = padLine(line13);
+                document.getElementById('lcd-line-4').innerText = padLine(a.loc);
+            } else {
+                const first = alarms[0];
+                const curr = alarms[currentIndex];
+
+                document.getElementById('lcd-line-1').innerText = padLine(`${first.group}/${first.detector} ${first.count} ${first.typeText}`);
+                document.getElementById('lcd-line-2').innerText = padLine(first.loc);
+                document.getElementById('lcd-line-3').innerText = padLine(`${curr.group}/${curr.detector} ${curr.count} ${curr.typeText}`);
+                document.getElementById('lcd-line-4').innerText = padLine(curr.loc);
+            }
+
+            // --- WICHTIG (Punkt 1): Auf/Ab-Taster Logik gemäß Lesestatus ---
+            let hasUp = false, unreadUp = false;
+            for (let i = 0; i < currentIndex; i++) {
+                hasUp = true;
+                if (!alarms[i].read) unreadUp = true;
+            }
+
+            let hasDown = false, unreadDown = false;
+            for (let i = currentIndex + 1; i < total; i++) {
+                hasDown = true;
+                if (!alarms[i].read) unreadDown = true;
+            }
+
+            const btnUp = document.getElementById('btn-fat-up');
+            btnUp.classList.remove('blink', 'solid');
+            if (unreadUp) btnUp.classList.add('blink');         // Blinken bei ungelesenen Meldungen
+            else if (hasUp) btnUp.classList.add('solid');       // Dauerhaft bei nur gelesenen Meldungen
+
+            const btnDown = document.getElementById('btn-fat-down');
+            btnDown.classList.remove('blink', 'solid');
+            if (unreadDown) btnDown.classList.add('blink');     // Blinken bei ungelesenen Meldungen
+            else if (hasDown) btnDown.classList.add('solid');   // Dauerhaft bei nur gelesenen Meldungen
+
+
+            // LEDs Aktualisieren
+            document.getElementById('fat-led-betrieb').classList.add('active');
+            document.getElementById('fbf-led-betrieb').classList.add('active');
+
+            document.getElementById('fat-led-alarm').classList.toggle('active', total > 0);
+            document.getElementById('fbf-led-ue-ausgeloest').classList.toggle('active', total > 0 && !ueAb);
+
+            document.getElementById('fat-led-stoerung').classList.toggle('active', bmzStoerung);
+            document.getElementById('fat-led-abschaltung').classList.toggle('active', brandfallAb || akustikAb || ueAb);
+
+            document.getElementById('fbf-led-loeschanlage').classList.toggle('active', loeschanlageAusgeloest);
+            document.getElementById('fbf-led-brandfall').classList.toggle('active', brandfallAb);
+            document.getElementById('fbf-led-akustik').classList.toggle('active', akustikAb);
+            document.getElementById('fbf-led-ue-ab').classList.toggle('active', ueAb);
+
+            // Audio-Status aktualisieren
+            updateBuzzerSound();
+        }
+
+        function setAllLEDs(state) {
+            document.querySelectorAll('.led').forEach(led => {
+                if (state) led.classList.add('active');
+                else led.classList.remove('active');
+            });
+        }
+
+        // --- WICHTIG (Punkt 2): BMZ Rückstellen mit exaktem 5s-Timer während Drücken ---
+        function startResetHold(e) {
+            if (e) e.preventDefault();
+            const flap = document.getElementById('flap-bmz');
+            if (!flap.classList.contains('open')) {
+                alert("Bitte zuerst die Schutzklappe öffnen!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-bmz-reset');
+            btn.classList.add('pressed');
+            resetTriggered = false;
+
+            // Nach exakt 5000ms gedrückt Halten wird das Zurückstellen NOCH WÄHREND DES DRÜCKENS ausgelöst
+            resetHoldTimer = setTimeout(() => {
+                resetTriggered = true;
+                btn.classList.remove('pressed');
+                executeBMZReset();
+            }, 5000);
+        }
+
+        function stopResetHold(e) {
+            if (e) e.preventDefault();
+            const btn = document.getElementById('btn-bmz-reset');
+            btn.classList.remove('pressed');
+
+            if (resetHoldTimer) {
+                clearTimeout(resetHoldTimer);
+                resetHoldTimer = null;
+            }
+        }
+
+        function executeBMZReset() {
+            clearAllAlarms();
+            loeschanlageAusgeloest = false;
+            bmzStoerung = false;
+            alert("Anlage erfolgreich zurückgestellt (5s gedrückt gehalten).");
+            updateDisplay();
+        }
+
+        // --- Summer Ab / Lampentest Timer ---
+        function startSummerBtnTimer() {
+            initAudio();
+            summerBtnHoldTriggered = false;
+            
+            // Halten > 5 Sekunden löst Lampentest aus
+            summerBtnTimer = setTimeout(() => {
+                summerBtnHoldTriggered = true;
+                lampTestActive = true;
+                updateDisplay();
+            }, 5000);
+        }
+
+        function stopSummerBtnTimer() {
+            if (summerBtnTimer) {
+                clearTimeout(summerBtnTimer);
+                summerBtnTimer = null;
+            }
+
+            if (lampTestActive) {
+                lampTestActive = false;
+                updateDisplay();
+            } else if (!summerBtnHoldTriggered) {
+                // Kurzdrücken = Summer stummschalten
+                buzzerSilenced = true;
+                updateDisplay();
+            }
+        }
+
+        // FBF Klappen und Tasten
+        function toggleFlap(id) {
+            const flap = document.getElementById(id);
+            flap.classList.toggle('open');
+        }
+
+        function testUe() {
+            const flap = document.getElementById('flap-ue');
+            if (!flap.classList.contains('open')) {
+                alert("Bitte zuerst die Schutzklappe öffnen!");
+                return;
+            }
+            alert("ÜE Verbindung wird geprüft... OK!");
+        }
+
+        function toggleBrandfallSteuerung() {
+            brandfallAb = !brandfallAb;
+            updateDisplay();
+        }
+
+        function toggleAkustischeSignale() {
+            akustikAb = !akustikAb;
+            updateDisplay();
+        }
+
+        function toggleUeAb() {
+            ueAb = !ueAb;
+            updateDisplay();
+        }
+
+        function toggleAnzeigeebene() {
+            alert("Anzeigeebene umgeschaltet");
+        }
+
+        // Admin Aktionen
+        function toggleAdmin() {
+            document.getElementById('admin-drawer').classList.toggle('open');
+        }
+
+        function addAlarmFromAdmin() {
+            const g = document.getElementById('adm-group').value;
+            const d = document.getElementById('adm-detector').value;
+            const c = document.getElementById('adm-count').value;
+            const t = document.getElementById('adm-type').value;
+            const l = document.getElementById('adm-loc').value;
+            addAlarm(g, d, c, t, l);
+        }
+
+        function toggleBMZStoerung() {
+            bmzStoerung = !bmzStoerung;
+            updateDisplay();
+        }
+
+        function toggleLoeschanlage() {
+            loeschanlageAusgeloest = !loeschanlageAusgeloest;
+            updateDisplay();
+        }
+
+        function clearAllAlarms() {
+            alarms = [];
+            currentIndex = 0;
+            buzzerSilenced = false;
+            updateDisplay();
+            updateAdminList();
+        }
+
+        function removeAlarm(id) {
+            alarms = alarms.filter(a => a.id !== id);
+            if (currentIndex >= alarms.length) {
+                currentIndex = Math.max(0, alarms.length - 1);
+            }
+            updateDisplay();
+            updateAdminList();
+        }
+
+        function updateAdminList() {
+            const container = document.getElementById('admin-alarm-list');
+            container.innerHTML = '';
+            if (alarms.length === 0) {
+                container.innerHTML = '<span style="color:#666;">Keine aktiven Alarme</span>';
+                return;
+            }
+            alarms.forEach((a, index) => {
+                const div = document.createElement('div');
+                div.className = 'alarm-item';
+                div.innerHTML = `
+                    <span>#${index+1} [${a.group}/${a.detector}] ${a.typeText} - ${a.loc} ${a.read ? '(gelesen)' : '(UNGALESEN)'}</span>
+                    <button style="background:#d32f2f; color:#fff; border:none; padding:2px 6px; cursor:pointer;" onclick="removeAlarm(${a.id})">Löschen</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Startzustand: 2 Alarme (1. bereits auf Display = gelesen, 2. darunter = ungelesen -> Pfeil abwärts blinkt!)
+        addAlarm(121, 15, 19, "aut Meld", "2.OG Rechenzentrum");
+        addAlarm(123, 12, 15, "aut Meld", "2.OG Konferenzraum");
+        currentIndex = 0; // Zurück auf erste Meldung setzen
+        updateDisplay();
+    </script>
+</body>
+</html>
