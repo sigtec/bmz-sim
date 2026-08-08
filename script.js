@@ -71,7 +71,7 @@ function addAlarm(group, detector, count, typeText, loc) {
     initAudio();
     
     const newAlarm = {
-        id: Date.now(),
+        id: Date.now() + Math.random(), // Eindeutige ID
         group: String(group).padStart(3, '0'),
         detector: String(detector).padStart(2, '0'),
         count: String(count).padStart(2, '0'),
@@ -106,7 +106,7 @@ function navigateAlarm(dir) {
 function updateDisplay() {
     const total = alarms.length;
 
-    // Die aktuell sichtbare Meldung gilt als gelesen
+    // Nur die aktuell unten sichtbare Meldung auf "gelesen" setzen
     if (total > 0 && alarms[currentIndex]) {
         alarms[currentIndex].read = true;
     }
@@ -159,24 +159,40 @@ function updateDisplay() {
     btnDown.classList.remove('blink', 'solid');
 
     if (total > 2) {
+        // Prüfen, ob oberhalb des aktuellen Index ungelesene Meldungen liegen
+        let unreadAbove = false;
+        for (let i = 0; i < currentIndex; i++) {
+            if (!alarms[i].read) {
+                unreadAbove = true;
+                break;
+            }
+        }
+
         // Scrollen NACH OBEN möglich?
         if (currentIndex > 0) {
-            let unreadAbove = false;
-            for (let i = 0; i < currentIndex; i++) {
-                if (!alarms[i].read) unreadAbove = true;
+            if (unreadAbove) {
+                btnUp.classList.add('blink'); // Blinken, weil z.B. Meldung 2 noch ungelesen ist
+            } else {
+                btnUp.classList.add('solid'); // Dauerhaft leuchten, wenn alles darüber bereits gelesen wurde
             }
-            if (unreadAbove) btnUp.classList.add('blink');
-            else btnUp.classList.add('solid');
+        }
+
+        // Prüfen, ob unterhalb des aktuellen Index ungelesene Meldungen liegen
+        let unreadBelow = false;
+        for (let i = currentIndex + 1; i < total; i++) {
+            if (!alarms[i].read) {
+                unreadBelow = true;
+                break;
+            }
         }
 
         // Scrollen NACH UNTEN möglich?
         if (currentIndex < total - 1) {
-            let unreadBelow = false;
-            for (let i = currentIndex + 1; i < total; i++) {
-                if (!alarms[i].read) unreadBelow = true;
+            if (unreadBelow) {
+                btnDown.classList.add('blink');
+            } else {
+                btnDown.classList.add('solid');
             }
-            if (unreadBelow) btnDown.classList.add('blink');
-            else btnDown.classList.add('solid');
         }
     }
 
