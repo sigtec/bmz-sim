@@ -46,7 +46,7 @@ class BMZ {
             this.alarms[this.currentIndex].read = true;
         }
     }
-}
+  }
 
     addAlarm(group, detector, count, typeText, loc) {
         const newAlarm = {
@@ -74,5 +74,55 @@ class BMZ {
         }
     }
 
-    // ... Rest von bmz.js bleibt gleich ...
+    removeAlarm(id) {
+        this.alarms = this.alarms.filter(a => a.id !== id);
+        if (this.currentIndex >= this.alarms.length) {
+            this.currentIndex = Math.max(0, this.alarms.length - 1);
+        }
+        this.notify();
+    }
+
+    resetBMZ() {
+        this.alarms = [];
+        this.currentIndex = 0;
+        this.buzzerSilenced = false;
+        this.loeschanlageAusgeloest = false;
+        this.bmzStoerung = false;
+        this.notify();
+    }
+
+    silenceBuzzer() {
+        this.buzzerSilenced = true;
+        this.notify();
+    }
+
+    setLampTest(active) {
+        this.lampTestActive = active;
+        this.notify();
+    }
+
+    toggleBrandfallSteuerung() {
+        this.brandfallAb = !this.brandfallAb;
+        this.notify();
+    }
+
+    toggleAkustischeSignale() {
+        this.akustikAb = !this.akustikAb;
+        this.notify();
+    }
+
+    toggleUeAb() {
+        this.ueAb = !this.ueAb;
+        this.notify();
+    }
+
+    toggleBMZStoerung() {
+        this.bmzStoerung = !this.bmzStoerung;
+        this.notify();
+    }
+
+    toggleLoeschanlage() {
+        this.loeschanlageAusgeloest = !this.loeschanlageAusgeloest;
+        this.notify();
+    }
 }
