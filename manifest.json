@@ -1,0 +1,18 @@
+{
+  "name": "BMZ Simulator DIN 14675",
+  "short_name": "BMZ Sim",
+  "description": "Erstinformationsstelle Simulation (FAT + FBF)",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#121212",
+  "theme_color": "#ff0000",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ff0000'/><text x='50' y='65' font-size='50' font-weight='bold' fill='%23ffffff' text-anchor='middle'>FAT</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
