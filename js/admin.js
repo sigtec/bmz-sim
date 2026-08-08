@@ -1,30 +1,44 @@
 class AdminUI {
     constructor(bmz) {
         this.bmz = bmz;
+        this.presetAlarms = [];
 
-        // Standard-Presets
-        this.presetAlarms = [
-            { group: 17, detector: 1, count: 1, typeText: "aut Meld", loc: "Raum 1.201 Flur 2.OG" },
-            { group: 17, detector: 5, count: 2, typeText: "aut Meld", loc: "Raum 1.205 WC Herren" },
-            { group: 18, detector: 2, count: 3, typeText: "aut Meld", loc: "Raum 1.205 ZD" },
-            { group: 22, detector: 1, count: 4, typeText: "Handmeld", loc: "Treppenhaus West UG" },
-            { group: 30, detector: 4, count: 5, typeText: "aut Meld", loc: "Serverraum R0.04" }
-        ];
-
-        this.initStorage();
         this.initDOM();
         this.bindEvents();
+        
+        // Erst Speicher/Server prüfen, dann initial rendern
+        this.initPresets();
     }
 
-    initStorage() {
+    // Lädt Presets: 1. LocalStorage -> 2. default.json vom Server -> 3. Fallback []
+    async initPresets() {
         const saved = localStorage.getItem('bma_scenario_presets');
         if (saved) {
             try {
                 this.presetAlarms = JSON.parse(saved);
+                this.renderPresets();
+                return;
             } catch (e) {
-                console.error("Fehler beim Laden der gespeicherten Szenarien", e);
+                console.error("Fehler beim Lesen aus localStorage:", e);
             }
         }
+
+        // Versuche default.json vom Server zu laden
+        try {
+            const response = await fetch('default.json', { cache: 'no-cache' });
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    this.presetAlarms = data;
+                    this.saveToStorage();
+                }
+            }
+        } catch (err) {
+            console.warn("Keine default.json gefunden oder Netzwerkfehler. Start ohne Vorlagen.", err);
+            this.presetAlarms = [];
+        }
+
+        this.renderPresets();
     }
 
     saveToStorage() {
@@ -64,15 +78,15 @@ class AdminUI {
         if (this.btnToggle) this.btnToggle.addEventListener('click', () => this.drawer?.classList.toggle('open'));
         if (this.btnClose) this.btnClose.addEventListener('click', () => this.drawer?.classList.remove('open'));
 
-        // Reset
+        // BMZ Reset
         if (this.btnClear) this.btnClear.addEventListener('click', () => this.bmz.resetBMZ());
 
-        // Neu
+        // Neue Schleife erfassen
         if (this.btnNew) {
             this.btnNew.addEventListener('click', () => this.openModalForNew());
         }
 
-        // Export
+        // Export (JSON)
         if (this.btnExport) {
             this.btnExport.addEventListener('click', () => {
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.presetAlarms, null, 2));
@@ -85,7 +99,7 @@ class AdminUI {
             });
         }
 
-        // Import
+        // Import (JSON)
         if (this.btnImportTrigger && this.inputFile) {
             this.btnImportTrigger.addEventListener('click', () => this.inputFile.click());
 
@@ -101,7 +115,6 @@ class AdminUI {
                             this.presetAlarms = importedData;
                             this.saveToStorage();
                             this.renderPresets();
-                            alert("Szenario erfolgreich geladen!");
                         } else {
                             alert("Ungültiges JSON-Format!");
                         }
@@ -114,20 +127,15 @@ class AdminUI {
             });
         }
 
-        // Modal Events
-        if (this.btnModalCancel) {
-            this.btnModalCancel.addEventListener('click', () => this.closeModal());
-        }
-
-        if (this.btnModalSave) {
-            this.btnModalSave.addEventListener('click', () => this.saveModalData());
-        }
+        // Modal Handler
+        if (this.btnModalCancel) this.btnModalCancel.addEventListener('click', () => this.closeModal());
+        if (this.btnModalSave) this.btnModalSave.addEventListener('click', () => this.saveModalData());
     }
 
     openModalForNew() {
         this.modalTitle.innerText = "Neue Schleife erfassen";
         this.modalIndex.value = "-1";
-        this.modalGroup.value = "17";
+        this.modalGroup.value = "1";
         this.modalDetector.value = "1";
         this.modalCount.value = "1";
         this.modalType.value = "aut Meld";
@@ -143,8 +151,8 @@ class AdminUI {
         this.modalIndex.value = index;
         this.modalGroup.value = item.group;
         this.modalDetector.value = item.detector;
-        this.modalCount.value = item.count;
-        this.modalType.value = item.typeText;
+        this.modalCount.value = item.count || 1;
+        this.modalType.value = item.typeText || "aut Meld";
         this.modalLoc.value = item.loc;
         this.modal.style.display = "flex";
     }
@@ -164,10 +172,8 @@ class AdminUI {
         };
 
         if (index === -1) {
-            // Neu erstellen
             this.presetAlarms.push(newItem);
         } else {
-            // Bearbeiten
             this.presetAlarms[index] = newItem;
         }
 
@@ -176,7 +182,7 @@ class AdminUI {
         this.closeModal();
     }
 
-    // Rendert die verfügbaren Schleifen (Presets) im einheitlichen Zeilen-Layout
+    // Rendert die verfügbaren Schleifen (inkl. Meldungsart)
     renderPresets() {
         if (!this.presetListContainer) return;
         this.presetListContainer.innerHTML = '';
@@ -192,20 +198,19 @@ class AdminUI {
 
             const info = document.createElement('span');
             info.style.cssText = "white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 8px;";
-            info.innerText = `[${String(p.group).padStart(3,'0')}/${String(p.detector).padStart(2,'0')}] ${p.loc}`;
+            // Anzeige von [Gruppe/Melder] Art - Standort
+            info.innerText = `[${String(p.group).padStart(3,'0')}/${String(p.detector).padStart(2,'0')}] ${p.typeText || 'aut Meld'} - ${p.loc}`;
 
             const actionContainer = document.createElement('div');
             actionContainer.style.cssText = "display:flex; gap:4px; flex-shrink:0;";
 
-            // Auslösen Button (Grün)
             const btnTrigger = document.createElement('button');
             btnTrigger.innerText = "Auslösen";
             btnTrigger.style.cssText = "background:#2e7d32; color:#fff; border:none; padding:3px 6px; border-radius:3px; cursor:pointer; font-size:0.75rem; font-weight:bold;";
             btnTrigger.addEventListener('click', () => {
-                this.bmz.addAlarm(p.group, p.detector, p.count, p.typeText, p.loc);
+                this.bmz.addAlarm(p.group, p.detector, p.count || 1, p.typeText || "aut Meld", p.loc);
             });
 
-            // Bearbeiten Button (Blau)
             const btnEdit = document.createElement('button');
             btnEdit.innerText = "Bearbeiten";
             btnEdit.style.cssText = "background:#1976d2; color:#fff; border:none; padding:3px 6px; border-radius:3px; cursor:pointer; font-size:0.75rem;";
@@ -225,7 +230,7 @@ class AdminUI {
     render(state) {
         this.renderPresets();
 
-        // Aktive Schleifen rendern im gleichen Zeilen-Layout
+        // Rendert aktive Schleifen (inkl. Meldungsart)
         if (!this.alarmListContainer) return;
         this.alarmListContainer.innerHTML = '';
 
@@ -240,9 +245,9 @@ class AdminUI {
 
             const info = document.createElement('span');
             info.style.cssText = "white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 8px;";
-            info.innerText = `[${a.group}/${a.detector}] ${a.loc}`;
+            // Anzeige von [Gruppe/Melder] Art - Standort
+            info.innerText = `[${String(a.group).padStart(3,'0')}/${String(a.detector).padStart(2,'0')}] ${a.typeText} - ${a.loc}`;
 
-            // Löschen Button (Rot)
             const btnDelete = document.createElement('button');
             btnDelete.innerText = "Löschen";
             btnDelete.style.cssText = "background:#d32f2f; color:#fff; border:none; padding:3px 6px; border-radius:3px; cursor:pointer; font-size:0.75rem; flex-shrink:0;";
