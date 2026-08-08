@@ -9,13 +9,13 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ff0000">
 
-    <!-- iOS / iPad App Mode -->
+    <!-- Web App Mode (Modern & Legacy) -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BMZ Sim">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23ff0000'/><text x='50' y='65' font-size='50' font-weight='bold' fill='%23ffffff' text-anchor='middle'>FAT</text></svg>">
 
-    <!-- External CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,8 +23,8 @@
     <div class="top-nav">
         <span style="font-size: 0.8rem; color: #aaa;">Erstinformationsstelle DIN 14675</span>
         <div>
-            <button class="btn-utility" onclick="toggleFullscreen()">Vollbild</button>
-            <button class="btn-utility" style="border-color:#ffaa00; color:#ffaa00;" onclick="toggleAdmin()">Admin-Oberfläche</button>
+            <button class="btn-utility" id="btn-fullscreen">Vollbild</button>
+            <button class="btn-utility" style="border-color:#ffaa00; color:#ffaa00;" id="btn-toggle-admin">Admin-Oberfläche</button>
         </div>
     </div>
 
@@ -54,9 +54,9 @@
                 <!-- Spalte 1: Navigation -->
                 <div class="fat-col">
                     <span class="arrow-icon">▲</span>
-                    <button id="btn-fat-up" class="din-btn" onclick="navigateAlarm(-1)"></button>
+                    <button id="btn-fat-up" class="din-btn"></button>
                     <span class="label-text">weitere Meldungen</span>
-                    <button id="btn-fat-down" class="din-btn" onclick="navigateAlarm(1)"></button>
+                    <button id="btn-fat-down" class="din-btn"></button>
                     <span class="arrow-icon">▼</span>
                 </div>
 
@@ -64,17 +64,12 @@
                 <div class="fat-col">
                     <div style="display:flex; flex-direction:column; align-items:center;">
                         <span class="label-text">Anzeigeebene</span>
-                        <button class="din-btn" onclick="toggleAnzeigeebene()"></button>
+                        <button id="btn-fat-ebene" class="din-btn"></button>
                         <span class="label-text" style="font-size:0.55rem; color:#ccc;">>5sec. Historie</span>
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:center; margin-top:8px;">
                         <span class="label-text">Summer ab</span>
-                        <button id="btn-summer-ab" class="din-btn"
-                                onmousedown="startSummerBtnTimer()" 
-                                onmouseup="stopSummerBtnTimer()"
-                                onmouseleave="stopSummerBtnTimer()"
-                                ontouchstart="startSummerBtnTimer()"
-                                ontouchend="stopSummerBtnTimer()"></button>
+                        <button id="btn-summer-ab" class="din-btn"></button>
                         <span class="label-text" style="font-size:0.55rem; color:#ccc;">>5sec. Test</span>
                     </div>
                 </div>
@@ -106,7 +101,6 @@
             <div class="panel-title">Feuerwehr - Bedienfeld</div>
 
             <div class="fbf-grid">
-                <!-- Zeile 1 -->
                 <div class="fbf-cell">
                     <div class="fbf-cell-content">
                         <div id="fbf-led-betrieb" class="led green active"></div>
@@ -120,7 +114,6 @@
                     </div>
                 </div>
 
-                <!-- Zeile 2 -->
                 <div class="fbf-cell">
                     <div class="fbf-cell-content">
                         <div id="fbf-led-loeschanlage" class="led red"></div>
@@ -132,16 +125,15 @@
                         <div id="fbf-led-brandfall" class="led yellow"></div>
                         <span class="label-text" style="text-align:left;">Brandfall-<br>Steuerungen<br>ab</span>
                     </div>
-                    <button class="din-btn" onclick="toggleBrandfallSteuerung()"></button>
+                    <button id="btn-fbf-brandfall" class="din-btn"></button>
                 </div>
 
-                <!-- Zeile 3 -->
                 <div class="fbf-cell">
                     <div class="fbf-cell-content">
                         <div id="fbf-led-akustik" class="led yellow"></div>
                         <span class="label-text" style="text-align:left;">Akustische<br>Signale ab</span>
                     </div>
-                    <button class="din-btn" onclick="toggleAkustischeSignale()"></button>
+                    <button id="btn-fbf-akustik" class="din-btn"></button>
                 </div>
                 <div class="fbf-cell">
                     <div class="fbf-cell-content">
@@ -149,23 +141,17 @@
                         <span class="label-text" style="text-align:left;">BMZ<br>rückstellen</span>
                     </div>
                     <div class="flap-container">
-                        <div id="flap-bmz" class="protective-flap" onclick="toggleFlap('flap-bmz')"></div>
-                        <button id="btn-bmz-reset" class="din-btn"
-                                onmousedown="startResetHold(event)"
-                                onmouseup="stopResetHold(event)"
-                                onmouseleave="stopResetHold(event)"
-                                ontouchstart="startResetHold(event)"
-                                ontouchend="stopResetHold(event)"></button>
+                        <div id="flap-bmz" class="protective-flap"></div>
+                        <button id="btn-bmz-reset" class="din-btn"></button>
                     </div>
                 </div>
 
-                <!-- Zeile 4 -->
                 <div class="fbf-cell">
                     <div class="fbf-cell-content">
                         <div id="fbf-led-ue-ab" class="led yellow"></div>
                         <span class="label-text" style="text-align:left;">ÜE ab</span>
                     </div>
-                    <button class="din-btn" onclick="toggleUeAb()"></button>
+                    <button id="btn-fbf-ue-ab" class="din-btn"></button>
                 </div>
                 <div class="fbf-cell">
                     <div class="fbf-cell-content" style="flex-direction:column; align-items:flex-start; justify-content:center;">
@@ -174,8 +160,8 @@
                         <span class="label-text" style="margin:0;">prüfen</span>
                     </div>
                     <div class="flap-container">
-                        <div id="flap-ue" class="protective-flap" onclick="toggleFlap('flap-ue')"></div>
-                        <button class="din-btn" onclick="testUe()"></button>
+                        <div id="flap-ue" class="protective-flap"></div>
+                        <button id="btn-fbf-ue-test" class="din-btn"></button>
                     </div>
                 </div>
             </div>
@@ -187,7 +173,7 @@
     <div class="admin-drawer" id="admin-drawer">
         <div class="admin-header">
             <span>ADMINISTRATOR SIMULATION</span>
-            <button class="btn-utility" onclick="toggleAdmin()">Schließen ✕</button>
+            <button class="btn-utility" id="btn-close-admin">Schließen ✕</button>
         </div>
 
         <div class="admin-grid">
@@ -219,10 +205,10 @@
         </div>
 
         <div class="admin-actions">
-            <button class="btn-adm" onclick="addAlarmFromAdmin()">+ Alarm Auslösen</button>
-            <button class="btn-adm btn-adm-red" onclick="toggleBMZStoerung()">Störung BMZ Umschalten</button>
-            <button class="btn-adm btn-adm-red" onclick="toggleLoeschanlage()">Löschanlage Auslösen</button>
-            <button class="btn-adm btn-adm-red" onclick="clearAllAlarms()">Alle Alarme Löschen</button>
+            <button class="btn-adm" id="btn-adm-add">+ Alarm Auslösen</button>
+            <button class="btn-adm btn-adm-red" id="btn-adm-stoerung">Störung BMZ Umschalten</button>
+            <button class="btn-adm btn-adm-red" id="btn-adm-loesch">Löschanlage Auslösen</button>
+            <button class="btn-adm btn-adm-red" id="btn-adm-clear">Alle Alarme Löschen</button>
         </div>
 
         <div class="active-alarms-list">
@@ -231,7 +217,11 @@
         </div>
     </div>
 
-    <!-- External JavaScript -->
-    <script src="script.js"></script>
+    <!-- Klassen-Skripte strukturieren -->
+    <script src="js/fbf.js"></script>
+    <script src="js/fat.js"></script>
+    <script src="js/bmz.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
